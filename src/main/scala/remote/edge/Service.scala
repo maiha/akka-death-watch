@@ -32,9 +32,8 @@ object Service {
     for (
       i <- 1 to 1000
     ) yield {
-      val timeout = 10 seconds
-      val f: Future[Any] = client.ask("hi")(timeout)
-      f.map { res =>
+      val future: Future[Any] = client.ask("hi")(10 seconds)
+      future.map { res =>
         println(s"res: ${res}")
       }
       Thread.sleep(3000)

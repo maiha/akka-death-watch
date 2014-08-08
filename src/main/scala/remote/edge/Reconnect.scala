@@ -52,8 +52,12 @@ trait Reconnect { this: Actor =>
       context.unwatch(ref)
       detach()
 
-    case msg: Any =>
+    case msg: String =>
       ref.forward(msg)
+
+    case msg: Any =>
+      println("!!!!!!!!!!!!!!!!!!!!!")
+      println(s"unknown msg: ${msg}")
   }
 
   private def handshake() {

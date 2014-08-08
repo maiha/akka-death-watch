@@ -17,7 +17,7 @@ object Service {
 
     System.setProperty("akka.remote.netty.tcp.hostname", host)
     System.setProperty("akka.remote.netty.tcp.port", port)
-
+    System.setProperty("akka.remote.retry-gate-closed-for", "5 s")
     start
   }
 
