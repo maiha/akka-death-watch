@@ -5,18 +5,17 @@ import akka.actor.Actor
 class BrokerActor extends Actor {
   def receive = {
     case "PING" =>
+      debug("recv: PING")
       sender() ! "PONG"
     case msg : String =>
-      debugLog(s"broker got String: ${msg}")
+      debug(s"got [${msg}]")
       sender() ! s"[String: ${msg}]"
     case msg : Any =>
-      debugLog(s"broker got unknown msg: ${msg}")
+      debug(s"got unknown [${msg}]")
       sender() ! s"[???: ${msg}]"
   }
 
-  private def debugLog(msg: String) {
-    println(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+  private def debug(msg: String) {
     println(msg)
-    println(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
   }
 }

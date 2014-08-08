@@ -21,19 +21,24 @@ class EdgeActor(path: String) extends Actor {
 
   def identifying: Receive = {
     case GetDiff =>
-      debug("got GetDiff")
+      debug("(recv): GetDiff")
 
     case PING =>
-      debug("got PING")
+      debug("(recv): PING")
+
+    case PONG =>
+      debug("(recv): PONG")
 
     case ActorIdentity(`path`, Some(ref)) =>
-      debug("identified")
+      debug("(identified)")
       context.watch(ref)
       context.become(active(ref))
       context.setReceiveTimeout(Duration.Undefined)
-      self ! Start
+//      self ! Start
+
     case ActorIdentity(`path`, None) =>
       debug(s"Remote actor not available: $path")
+
     case ReceiveTimeout              => sendIdentifyRequest()
   }
 
@@ -42,15 +47,25 @@ class EdgeActor(path: String) extends Actor {
       getDiff(ref)
 
     case PING =>
-      debug("got PING")
+      debug("recv: PING")
+      debug("send: PING")
+      ref ! PING
+
+    case PONG =>
+      debug("recv: PONG")
 
     case Start =>
-      sendlog(ref, "start")
+      debug("recv: Start")
+      debug("send: Start")
       ref ! "start"
 
     case Done =>
-      sendlog(ref, "done")
+      debug("recv: Done")
+      debug("send: done")
       ref ! "done"
+
+    case msg: String =>
+      debug(s"got: ${msg}")
 
     case Terminated(`ref`) =>
       println("Receiver terminated")
@@ -63,13 +78,11 @@ class EdgeActor(path: String) extends Actor {
   }
 
   private def sendlog(ref: ActorRef, arg: Any) {
-    val msg = s"from: [${self.path}]\nto: [${ref.path}]\n${arg}"
+    val msg = s"send: [${self.path}] -> [${ref.path}]\n  ${arg}"
     debug(msg)
   }
 
   private def debug(msg: String) {
-    println(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
     println(msg)
-    println(s"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
   }
 }
