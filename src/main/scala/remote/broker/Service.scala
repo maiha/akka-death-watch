@@ -23,7 +23,6 @@ object Service {
 
   def start() {
     // TODO: configと動的な値の合成方法
-//    val config = ConfigFactory.load(name)
     val system = ActorSystem(name)
     val broker = system.actorOf(Props[BrokerActor], name)
 
