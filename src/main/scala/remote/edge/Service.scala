@@ -25,22 +25,21 @@ object Service {
 
     //Use the system's dispatcher as ExecutionContext
     import system.dispatcher
+    system.scheduler.schedule(0 seconds, 5 seconds, client, Reconnect.Heartbeat)
 
-    system.scheduler.schedule(0 seconds, 10 seconds, client, PING )
-    system.scheduler.schedule(5 seconds,  5 seconds, client, GetDiff)
+    import akka.pattern.ask
+
+    for (
+      i <- 1 to 1000
+    ) yield {
+      val timeout = 10 seconds
+      val f: Future[Any] = client.ask("hi")(timeout)
+      f.map { res =>
+        println(s"res: ${res}")
+      }
+      Thread.sleep(3000)
+    }
   }
 
   def props(path: String): Props = Props(new EdgeActor(path))
-
-  val PING = "PING"
-  val PONG = "PONG"
-
-  case object GetDiff
-  case object Handshake
-
-  private case object Warmup
-  case object Shutdown
-  sealed trait Echo
-  case object Start extends Echo
-  case object Done extends Echo
 }

@@ -9,10 +9,10 @@ class BrokerActor extends Actor {
       sender() ! "PONG"
     case msg : String =>
       debug(s"got [${msg}]")
-      sender() ! s"[String: ${msg}]"
+      sender() ! s"(broker)[${msg}]"
     case msg : Any =>
       debug(s"got unknown [${msg}]")
-      sender() ! s"[???: ${msg}]"
+      sender() ! s"(broker)[???: ${msg}]"
   }
 
   private def debug(msg: String) {
