@@ -36,6 +36,7 @@ object Service {
   val PONG = "PONG"
 
   case object GetDiff
+  case object Handshake
 
   private case object Warmup
   case object Shutdown

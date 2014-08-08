@@ -13,13 +13,17 @@ import akka.actor.Terminated
 class EdgeActor(path: String) extends Actor {
   import Service._
 
-  context.setReceiveTimeout(3.seconds)
-  sendIdentifyRequest()
-    
-  def sendIdentifyRequest() { context.actorSelection(path) ! Identify(path) }
-  def receive = identifying
+  override def preStart() {
+//    context.setReceiveTimeout(3.seconds)
+    self ! Handshake
+  }
 
-  def identifying: Receive = {
+  def receive = idle
+
+  def idle: Receive = {
+    case Handshake =>
+      handshake()
+
     case GetDiff =>
       debug("(recv): GetDiff")
 
@@ -39,10 +43,13 @@ class EdgeActor(path: String) extends Actor {
     case ActorIdentity(`path`, None) =>
       debug(s"Remote actor not available: $path")
 
-    case ReceiveTimeout              => sendIdentifyRequest()
+    case ReceiveTimeout =>
+      self ! Handshake
   }
 
   def active(ref: ActorRef): Receive = {
+    case Handshake => // NOP
+
     case GetDiff =>
       getDiff(ref)
 
@@ -70,6 +77,10 @@ class EdgeActor(path: String) extends Actor {
     case Terminated(`ref`) =>
       println("Receiver terminated")
       context.system.shutdown()
+  }
+
+  private def handshake() {
+    context.actorSelection(path) ! Identify(path)
   }
 
   private def getDiff(ref: ActorRef) {
