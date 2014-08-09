@@ -18,16 +18,15 @@ object Service {
     System.setProperty("akka.remote.netty.tcp.hostname", host)
     System.setProperty("akka.remote.netty.tcp.port", port)
     System.setProperty("akka.remote.retry-gate-closed-for", "5 s")
+    System.setProperty("akka.loglevel", "INFO")
     start
   }
 
   def start() {
     // TODO: configと動的な値の合成方法
+//    val system = ActorSystem(name, ConfigFactory.load(name))
     val system = ActorSystem(name)
     val broker = system.actorOf(Props[BrokerActor], name)
-
-    val host = System.getProperty("akka.remote.netty.tcp.hostname")
-    val port = System.getProperty("akka.remote.netty.tcp.port")
 
     println(s"Started BrokerSystem(${broker.path}). Waiting for messages")
   }
