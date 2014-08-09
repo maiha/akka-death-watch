@@ -25,7 +25,7 @@ object Service {
 
     //Use the system's dispatcher as ExecutionContext
     import system.dispatcher
-    system.scheduler.schedule(0 seconds, 5 seconds, client, Reconnect.Heartbeat)
+//    system.scheduler.schedule(0 seconds, 5 seconds, client, Reconnect.Heartbeat)
 
     import akka.pattern.ask
 
