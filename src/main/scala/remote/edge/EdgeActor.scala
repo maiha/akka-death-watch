@@ -1,9 +1,7 @@
 package remote.edge
 
-import akka.actor.{ ActorSystem, Actor, ActorRef, Props }
+import akka.actor.Actor
 
-// class EdgeActor(path: String) extends WorkerWatcher(path)
-
-class EdgeActor(val path: String) extends Actor with Reconnect {
+class EdgeActor(val path: String) extends Actor with Retry {
   import Service._
 }

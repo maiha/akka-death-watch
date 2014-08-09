@@ -10,7 +10,7 @@ import akka.actor.ActorIdentity
 import akka.actor.ReceiveTimeout
 import akka.actor.Terminated
 
-trait Reconnect { this: Actor =>
+trait Retry { this: Actor =>
   val path: String
   val handshakeTimeout  = 3 seconds
   val heartbeatInterval = 5 seconds
@@ -50,29 +50,20 @@ trait Reconnect { this: Actor =>
   }
 
   def detach() {
-    debug("コネクションを破棄します")
+    debug("接続を破棄します")
     lastRemoteActorRef foreach { context.unwatch(_) }
     context.become(idle)
   }
 
   def idle: Receive = {
-    case Heartbeat  =>
-      debug("(heartbeat)")
-      handshake()
-
-    case ActorIdentity(`path`, Some(ref)) =>
-      attach(ref)
-
-    case ActorIdentity(`path`, None) =>
-      debug(s"リモートと接続できません: $path")
-
-    case ReceiveTimeout =>
-      debug(s"応答がありません(タイムアウト:$handshakeTimeout): $path")
+    case Heartbeat                        => handshake()
+    case ActorIdentity(`path`, Some(ref)) => attach(ref)
+    case ActorIdentity(`path`, None)      => debug(s"接続できません: $path")
+    case ReceiveTimeout                   => debug(s"応答がありません($handshakeTimeout): $path")
   }
 
   def active(ref: ActorRef): Receive = {
-    case Heartbeat  =>
-      debug("heartbeat: nop")
+    case Heartbeat  => // NOP
 
     // 相手が死んだ瞬間 (via RemotingLifecycleEvent)
     case e: DisassociatedEvent =>
