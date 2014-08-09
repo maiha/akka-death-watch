@@ -20,8 +20,11 @@ object Service {
     val host = "localhost"
     val path = s"akka.tcp://$name@$host:$port/user/broker"
 
-    val system = ActorSystem("Sys", ConfigFactory.load("broker"))
+    val system = ActorSystem("edge", ConfigFactory.load("broker"))
     val client = system.actorOf(Service.props(path), "snd")
+
+//    val client2 = system.actorOf(Service.props(path), "snd2")
+
 
     //Use the system's dispatcher as ExecutionContext
     import system.dispatcher

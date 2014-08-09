@@ -2,7 +2,6 @@ package remote.edge
 
 import akka.actor.{ ActorSystem, Actor, ActorRef, Props, Cancellable }
 import com.typesafe.config.ConfigFactory
-import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._
 
 import akka.actor.Identify
