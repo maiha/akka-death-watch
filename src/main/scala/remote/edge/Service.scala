@@ -16,14 +16,13 @@ object Service {
   }
 
   def lookup(port: String) {
-    val name = remote.broker.Service.name
-    val host = "localhost"
-    val path = s"akka.tcp://$name@$host:$port/user/broker"
+    val host   = "localhost"
+    val remote = s"akka.tcp://broker@$host:$port/user/broker"
 
-    val system = ActorSystem("edge", ConfigFactory.load("broker"))
-    val client = system.actorOf(Service.props(path), "snd")
+    val system = ActorSystem("edge", ConfigFactory.load("edge"))
+    val client = system.actorOf(Service.props(remote), "edge")
 
-//    val client2 = system.actorOf(Service.props(path), "snd2")
+//    val client2 = system.actorOf(Service.props(remote), "snd2")
 
 
     //Use the system's dispatcher as ExecutionContext
@@ -41,5 +40,5 @@ object Service {
     }
   }
 
-  def props(path: String): Props = Props(new EdgeActor(path))
+  def props(remote: String): Props = Props(new EdgeActor(remote))
 }

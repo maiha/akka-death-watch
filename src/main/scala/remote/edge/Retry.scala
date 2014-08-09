@@ -10,7 +10,7 @@ import akka.actor.ReceiveTimeout
 import akka.actor.Terminated
 
 trait Retry { this: Actor =>
-  val path: String
+  val remote: String
   val handshakeTimeout  = 3 seconds
   val heartbeatInterval = 5 seconds
 
@@ -23,7 +23,7 @@ trait Retry { this: Actor =>
 
   case object Heartbeat
 
-  import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent, RemotingLifecycleEvent}
+  import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent, RemotingLifecycleEvent, QuarantinedEvent}
   override def preStart() {
     // super.preStart()
     system.eventStream.subscribe(self, classOf[RemotingLifecycleEvent])
@@ -55,10 +55,10 @@ trait Retry { this: Actor =>
   }
 
   def idle: Receive = {
-    case Heartbeat                        => handshake()
-    case ActorIdentity(`path`, Some(ref)) => attach(ref)
-    case ActorIdentity(`path`, None)      => debug(s"接続できません: $path")
-    case ReceiveTimeout                   => debug(s"応答がありません($handshakeTimeout): $path")
+    case Heartbeat                   => handshake()
+    case ActorIdentity(p, Some(ref)) => attach(ref)
+    case ActorIdentity(p, None)      => debug(s"接続できません: $p")
+    case ReceiveTimeout              => debug(s"応答がありません($handshakeTimeout): $remote")
   }
 
   def active(ref: ActorRef): Receive = {
@@ -66,42 +66,39 @@ trait Retry { this: Actor =>
 
     // 相手が死んだ瞬間 (via RemotingLifecycleEvent)
     case e: DisassociatedEvent =>
-      println(s"コネクションが切断されました: ${e}")
+      debug(s"コネクションが切断されました: ${e}")
       detach()
 
     // 完全に落ちてる時
     case e: AssociationErrorEvent =>
-      println(s"AssociationError: ${e}")
+      debug(s"AssociationError: ${e}")
 
     // Actorが停止した (via context.watch(ref))
     case Terminated(`ref`) =>
-      println(s"Terminatedを受け取りました: ${ref.path}")
+      debug(s"Terminatedを受け取りました: ${ref.path}")
       detach()
 
-    case msg: String =>
-      ref.forward(msg)
+    // Association to [akka.tcp://broker@localhost:2701] having UID [356031221] is irrecoverably failed. UID is now quarantined and all messages to this UID will be delivered to dead letters. Remote actorsystem must be restarted to recover from this situation.
+    case QuarantinedEvent(address, uid) =>
+      debug(s"隔離されました: $address $uid")
 
-    case msg: Any =>
-      // Association to [akka.tcp://broker@localhost:2701] having UID [356031221] is irrecoverably failed. UID is now quarantined and all messages to this UID will be delivered to dead letters. Remote actorsystem must be restarted to recover from this situation.
-      if (msg.toString.contains(" quarantined ")) {
-        println("remote actorが隔離されました")
-        detach()
-      } else {
-        println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        println(s"想定外のメッセージを受信しました: ${msg}")
-      }
+    case msg: RemotingLifecycleEvent =>
+      debug(s"未知のイベント: ${msg}")
+
+    case msg =>
+      ref.forward(msg)
   }
 
   private def handshake() {
     lastRemoteActorRef match {
-      case None => debug(s"接続します: $path")
-      case _    => debug(s"再接続します: $path")
+      case None => debug(s"接続します: $remote")
+      case _    => debug(s"再接続します: $remote")
     }
     context.setReceiveTimeout(handshakeTimeout)
-    context.actorSelection(path) ! Identify(path)
+    context.actorSelection(remote) ! Identify(remote)
   }
 
   private def debug(msg: String) {
-    println(msg)
+    println(s"[${self.path}] $msg")
   }
 }

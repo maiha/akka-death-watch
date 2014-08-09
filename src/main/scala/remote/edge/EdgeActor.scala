@@ -2,6 +2,6 @@ package remote.edge
 
 import akka.actor.Actor
 
-class EdgeActor(val path: String) extends Actor with Retry {
+class EdgeActor(val remote: String) extends Actor with Retry {
   import Service._
 }

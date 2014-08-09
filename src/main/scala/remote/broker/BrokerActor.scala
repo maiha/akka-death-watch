@@ -1,21 +1,14 @@
 package remote.broker
 
 import akka.actor.Actor
+import akka.actor.ActorLogging
 
-class BrokerActor extends Actor {
+class BrokerActor extends Actor with ActorLogging {
+  val me = s"[${self.path}]"
+
   def receive = {
-    case "PING" =>
-      debug("recv: PING")
-      sender() ! "PONG"
     case msg : String =>
-      debug(s"got [${msg}]")
-      sender() ! s"(broker)[${msg}]"
-    case msg : Any =>
-      debug(s"got unknown [${msg}]")
-      sender() ! s"(broker)[???: ${msg}]"
-  }
-
-  private def debug(msg: String) {
-    println(msg)
+      log.info(s"${me} got ${msg}")
+      sender() ! s"${me}: ${msg}"
   }
 }
