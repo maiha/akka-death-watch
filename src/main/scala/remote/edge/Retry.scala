@@ -72,6 +72,7 @@ trait Retry { this: Actor =>
     // 完全に落ちてる時
     case e: AssociationErrorEvent =>
       debug(s"AssociationError: ${e}")
+      detach()
 
     // Actorが停止した (via context.watch(ref))
     case Terminated(`ref`) =>
@@ -81,9 +82,10 @@ trait Retry { this: Actor =>
     // Association to [akka.tcp://broker@localhost:2701] having UID [356031221] is irrecoverably failed. UID is now quarantined and all messages to this UID will be delivered to dead letters. Remote actorsystem must be restarted to recover from this situation.
     case QuarantinedEvent(address, uid) =>
       debug(s"隔離されました: $address $uid")
+      detach()
 
     case msg: RemotingLifecycleEvent =>
-      debug(s"未知のイベント: ${msg}")
+      debug(s"未知のremoteイベント: ${msg}")
 
     case msg =>
       ref.forward(msg)

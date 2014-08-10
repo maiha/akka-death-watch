@@ -18,6 +18,8 @@ object Service {
     System.setProperty("akka.remote.netty.tcp.hostname", host)
     System.setProperty("akka.remote.netty.tcp.port", port)
     System.setProperty("akka.remote.retry-gate-closed-for", "5 s")
+    System.setProperty("akka.log-dead-letters", "off")
+    System.setProperty("akka.log-dead-letters-during-shutdown", "off")
     System.setProperty("akka.loglevel", "INFO")
     start
   }
