@@ -4,31 +4,20 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorSystem, Props }
 
 object Service {
+  import util.RemoteAddress
+
   val name = "broker"
 
   def main(args: Array[String]) {
-    var host = "localhost"
-    var port = "2652"
-
-    if (args.nonEmpty) {
-      host = args(0)
-      port = args(1)
-    }
-
-    System.setProperty("akka.remote.netty.tcp.hostname", host)
-    System.setProperty("akka.remote.netty.tcp.port", port)
-    System.setProperty("akka.remote.retry-gate-closed-for", "5 s")
-    System.setProperty("akka.log-dead-letters", "off")
-    System.setProperty("akka.log-dead-letters-during-shutdown", "off")
-    System.setProperty("akka.loglevel", "INFO")
-    start
+    val conf = RemoteAddress.fromConfig("broker")
+    val addr = RemoteAddress.parseWithDefault(args(0), conf).resolve
+    start(addr)
   }
 
-  def start() {
-    // TODO: configと動的な値の合成方法
-//    val system = ActorSystem(name, ConfigFactory.load(name))
-    val system = ActorSystem(name)
-    val broker = system.actorOf(Props[BrokerActor], name)
+  def start(addr: RemoteAddress) {
+    val config  = ConfigFactory.parseString(addr.configString).withFallback(ConfigFactory.load("broker"))
+    val system  = ActorSystem(name, config)
+    val broker  = system.actorOf(Props[BrokerActor], name)
 
     println(s"Started BrokerSystem(${broker.path}). Waiting for messages")
   }

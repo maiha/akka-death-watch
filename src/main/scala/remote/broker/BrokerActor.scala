@@ -4,11 +4,11 @@ import akka.actor.Actor
 import akka.actor.ActorLogging
 
 class BrokerActor extends Actor with ActorLogging {
-  val me = s"[${self.path}]"
-
   def receive = {
     case msg : String =>
+      val me = self.path.toString
       log.info(s"${me} got ${msg}")
-      sender() ! s"${me}: ${msg}"
+      val remote = sender.path.toString
+      sender() ! s"${remote}>${msg}"
   }
 }
