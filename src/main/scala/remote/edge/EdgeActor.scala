@@ -1,7 +1,11 @@
 package remote.edge
 
 import akka.actor.Actor
-import util.Retry
+import akka.actor.ActorRef
 
-class EdgeActor(val remote: String) extends Actor with Retry {
+class EdgeActor(broker: ActorRef) extends Actor {
+  def receive: Receive = {
+    case msg =>
+      broker.forward(msg)
+  }
 }

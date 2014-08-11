@@ -27,7 +27,8 @@ object Service {
     val config = ConfigFactory.parseString(local.configString).withFallback(ConfigFactory.load("edge"))
     val system = ActorSystem("edge", config)
     val path   = remote.path("broker", "broker") // akka remote path for broker
-    val edge   = system.actorOf(Service.props(path), "edge")
+    val agent  = system.actorOf(Props(classOf[BrokerAgent], path), "agent")
+    val edge   = system.actorOf(Service.props(agent), "edge")
 
     //Use the system's dispatcher as ExecutionContext
     import system.dispatcher
@@ -44,5 +45,5 @@ object Service {
     }
   }
 
-  def props(remote: String): Props = Props(new EdgeActor(remote))
+  def props(agent: ActorRef): Props = Props(new EdgeActor(agent))
 }

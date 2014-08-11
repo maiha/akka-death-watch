@@ -1,4 +1,4 @@
-package remote.edge
+package util
 
 import akka.actor.{ ActorSystem, Actor, ActorRef, Props, Cancellable }
 import com.typesafe.config.ConfigFactory
@@ -9,14 +9,36 @@ import akka.actor.ActorIdentity
 import akka.actor.ReceiveTimeout
 import akka.actor.Terminated
 
+/**
+ * remote actor への再接続を自動で行うtrait
+ *
+ * [使用例]
+ *   class BrokerAgent(val remote: String) extends Actor with Retry {
+ *   }
+ * [設定]
+ *   val remote: String    // 接続するactorのパス    (例: "akka.tcp://broker...")
+ *   val handshakeTimeout  // 接続時のタイムアウト   (例: 3 seconds)
+ *   val heartbeatInterval // 死活監視のインターバル (例: 5 seconds)
+ * [再接続]
+ *   RemotingLifecycleEventを見張り、以下のイベント発生時に再接続する
+ *     - DisassociatedEvent    // 相手が死んだ瞬間
+ *     - AssociationErrorEvent // 完全に落ちてる時
+ *     - Terminated            // Actorが停止した
+ *     - QuarantinedEvent      // 隔離された
+ * [気になる点]
+ *   - QuarantinedEventの場合、再接続を試みるが殆ど復旧できない
+ *   - traitでなく具象actorの方がよいかも(super使えるので)
+ *   - Terminatedは自明なのでwatchは外してよいのかも
+ */
+
 trait Retry { this: Actor =>
   val remote: String
-  val handshakeTimeout  = 3 seconds
-  val heartbeatInterval = 5 seconds
+  val handshakeTimeout  = 10 seconds
+  val heartbeatInterval = 20 seconds
 
   var lastRemoteActorRef: Option[ActorRef] = None
   var subscribedClasses = scala.collection.mutable.Set[Class[_]]()
-  var scheduledJobs = scala.collection.mutable.Set[Cancellable]()
+  var scheduledJobs     = scala.collection.mutable.Set[Cancellable]()
 
   import scala.concurrent.ExecutionContext.Implicits.global
   import context.system
@@ -25,9 +47,10 @@ trait Retry { this: Actor =>
 
   import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent, RemotingLifecycleEvent, QuarantinedEvent}
   override def preStart() {
+    // TODO: traitだとsuperできない？
     // super.preStart()
     system.eventStream.subscribe(self, classOf[RemotingLifecycleEvent])
-    subscribedClasses  += classOf[RemotingLifecycleEvent]
+    subscribedClasses += classOf[RemotingLifecycleEvent]
     scheduledJobs += system.scheduler.schedule(0 seconds, heartbeatInterval, self, Heartbeat)
   }
 
@@ -100,7 +123,8 @@ trait Retry { this: Actor =>
     context.actorSelection(remote) ! Identify(remote)
   }
 
-  private def debug(msg: String) {
+  // TODO: Logger へ追い出す
+  def debug(msg: String) {
     println(s"[${self.path}] $msg")
   }
 }
