@@ -31,7 +31,9 @@ import akka.actor.Terminated
  *   - Terminatedは自明なのでwatchは外してよいのかも
  */
 
-trait Retry { this: Actor =>
+trait Retry extends Actor {
+  import scala.language.postfixOps
+
   val remote: String
   val handshakeTimeout  = 10 seconds
   val heartbeatInterval = 20 seconds
@@ -47,8 +49,7 @@ trait Retry { this: Actor =>
 
   import akka.remote.{AssociatedEvent, AssociationErrorEvent, AssociationEvent, DisassociatedEvent, RemotingLifecycleEvent, QuarantinedEvent}
   override def preStart() {
-    // TODO: traitだとsuperできない？
-    // super.preStart()
+    super.preStart()
     system.eventStream.subscribe(self, classOf[RemotingLifecycleEvent])
     subscribedClasses += classOf[RemotingLifecycleEvent]
     scheduledJobs += system.scheduler.schedule(0 seconds, heartbeatInterval, self, Heartbeat)
@@ -58,7 +59,7 @@ trait Retry { this: Actor =>
     subscribedClasses foreach(system.eventStream.unsubscribe(self, _))
     scheduledJobs foreach(_.cancel())
     scheduledJobs.clear()
-    // super.postStop()
+    super.postStop()
   }
 
   def receive = idle
