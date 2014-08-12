@@ -4,6 +4,7 @@ import akka.actor.{ ActorSystem, Actor, ActorRef, Props }
 import com.typesafe.config.ConfigFactory
 import scala.concurrent.{ Future, Await }
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 object Service {
   import util.RemoteAddress

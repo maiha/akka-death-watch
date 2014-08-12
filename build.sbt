@@ -8,3 +8,4 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-remote" % "2.3.4"
 )
 
+scalacOptions ++= Seq("-feature")

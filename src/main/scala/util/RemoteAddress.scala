@@ -33,10 +33,10 @@ object RemoteAddress {
 
   def parseWithDefault(addr: String, default: RemoteAddress): RemoteAddress = {
     try {
-      val blank    = """\A\s*\Z""" r
-      val hostPort = """\A([^:]+):(\d+)\Z""" r
-      val hostOnly = """\A([^:]+)\Z""" r
-      val portOnly = """\A:([^:]+)\Z""" r
+      val blank    = """\A\s*\Z""".r
+      val hostPort = """\A([^:]+):(\d+)\Z""".r
+      val hostOnly = """\A([^:]+)\Z""".r
+      val portOnly = """\A:([^:]+)\Z""".r
 
       addr match {
         case null           => default
