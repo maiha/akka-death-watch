@@ -16,10 +16,10 @@ object Service {
       throw new RuntimeException("usage: local(addr) remote(addr)")
 
     val edge   = RemoteAddress.fromConfig("edge")
-    val local  = RemoteAddress.parseWithDefault(args(0), edge).resolve
+    val local  = RemoteAddress.parseWithDefault(args(0), edge)
 
     val broker = RemoteAddress.fromConfig("broker")
-    val remote = RemoteAddress.parseWithDefault(args(1), broker).resolve
+    val remote = RemoteAddress.parseWithDefault(args(1), broker)
 
     start(local, remote)
   }

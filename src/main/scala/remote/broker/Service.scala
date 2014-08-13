@@ -10,7 +10,7 @@ object Service {
 
   def main(args: Array[String]) {
     val conf = RemoteAddress.fromConfig("broker")
-    val addr = RemoteAddress.parseWithDefault(args(0), conf).resolve
+    val addr = RemoteAddress.parseWithDefault(args(0), conf)
     start(addr)
   }
 
